@@ -29,16 +29,9 @@ public class JwtUtils {
 	@Value("${app.jwt.expiration.ms}")
 	private int jwtExpirationMs;
 	
-	private Key jwtKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);
-
 	public String generateJwtToken(Authentication authentication) {
 
 		UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
-		Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-		/*
-		Key hmacKey = new SecretKeySpec(Base64.getDecoder().decode(jwtSecret), 
-                SignatureAlgorithm.HS256.getJcaName());
-        */
 		SecretKey sKey = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
 		
 		return Jwts.builder()
@@ -46,21 +39,13 @@ public class JwtUtils {
 					.setIssuedAt(new Date())
 					.setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
 					.signWith(sKey)
-					//.signWith(hmacKey)
-					//.signWith(sKey, SignatureAlgorithm.HS512)
-					//.encryptWith(jwtSecret, key , "HS256")
 					.compact();
 	}
 
 	public String getUserNameFromJwtToken(String token) {
-		//Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-		Key hmacKey = new SecretKeySpec(Base64.getDecoder().decode(jwtSecret), 
-                SignatureAlgorithm.HS512.getJcaName());
 		SecretKey sKey = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
 		return Jwts.parserBuilder()
-				//.setSigningKey(hmacKey)
 				.setSigningKey(sKey)
-				//.setSigningKey(jwtKey)
 				.build()
 				.parseClaimsJws(token)
 				.getBody().getSubject();
@@ -68,7 +53,6 @@ public class JwtUtils {
 
 	public boolean validateJwtToken(String authToken) {
 		try {
-			//Key key = Keys.secretKeyFor(SignatureAlgorithm.HS512);
 			SecretKey sKey = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
 			Jwts.parserBuilder()
 				.setSigningKey(sKey)
